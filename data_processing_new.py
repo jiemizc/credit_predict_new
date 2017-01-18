@@ -211,6 +211,21 @@ def get_bill_vec(train_x_credit):
     grouped_credit_x.columns = ['_'.join(col).strip() for col in grouped_credit_x.columns.values]
     return grouped_credit_x
 
+def get_bill_data_period(train_x_credit, loan_time, period=60):
+    train_x_credit['lower'] = train_x_credit['time'].values - 86400 * period
+    train_x_credit['upper'] = train_x_credit['time'].values + 86400 * period
+    train_x_credit = pd.merge(train_x_credit, loan_time, on=['id', 'id'], how='left')
+
+    lower = train_x_credit[train_x_credit.apply(lambda x: x['time'] >= x['loan_time'] >= x['lower'], axis=1)]
+    lower = lower.drop('lower', 1).drop('upper', 1)
+    vec2 = get_bill_vec(lower)
+
+    upper = train_x_credit[train_x_credit.apply(lambda x: x['upper'] >= x['loan_time'] >= x['time'], axis=1)]
+    upper = upper.drop('upper', 1).drop('lower', 1)
+    vec3 = get_bill_vec(upper)
+
+    return pd.merge(vec2, vec3, left_index=True, right_index=True, how='outer')
+
 def get_bill_data(file='train'):
     if file == 'train':
         file = "/Users/ericzhou.zc/Downloads/credit/train/bill_detail_train.txt"
@@ -230,21 +245,13 @@ def get_bill_data(file='train'):
     loan_time = pd.read_csv(file_loan, header=None)
     loan_time.columns = ['id', 'loan_time']
 
-    train_x_credit['lower'] = train_x_credit['time'].values - 86400 * 60
-    train_x_credit['upper'] = train_x_credit['time'].values + 86400 * 60
-    train_x_credit = pd.merge(train_x_credit, loan_time, on=['id','id'], how='left')
+    tmp1 = get_bill_data_period(train_x_credit=train_x_credit, loan_time=loan_time, period=60)
+    tmp2 = get_bill_data_period(train_x_credit=train_x_credit, loan_time=loan_time, period=30)
+    tmp3 = get_bill_data_period(train_x_credit=train_x_credit, loan_time=loan_time, period=90)
 
-    lower = train_x_credit[train_x_credit.apply(lambda x:x['time']>=x['loan_time']>=x['lower'], axis=1)]
-    lower = lower.drop('lower',1).drop('upper',1)
-    vec2 = get_bill_vec(lower)
-
-    upper = train_x_credit[train_x_credit.apply(lambda x: x['upper'] >= x['loan_time'] >= x['time'], axis=1)]
-    upper = upper.drop('upper', 1).drop('lower', 1)
-
-    vec3 = get_bill_vec(upper)
-
-    tmp = pd.merge(vec1, vec2, left_index=True, right_index=True,how='outer')
-    return pd.merge(tmp, vec3, left_index=True, right_index=True,how='outer')
+    tmp = pd.merge(tmp1, tmp2, left_index=True, right_index=True,how='outer')
+    tmp = pd.merge(tmp, tmp3, left_index=True, right_index=True, how='outer')
+    return pd.merge(tmp, vec1, left_index=True, right_index=True,how='outer')
 
 
 def get_train_data(one_hot_for_categorial=False, browse=False):

@@ -120,7 +120,7 @@ def build_estimator(model_dir):
             model_dir=model_dir,
             linear_feature_columns=wide_columns,
             dnn_feature_columns=deep_columns,
-            dnn_hidden_units=[100, 50])
+            dnn_hidden_units=[200,100, 50])
     return m
 
 
@@ -158,13 +158,24 @@ def train_and_eval():
     df_train.columns = [n.replace('<','').replace('>','') for n in df_train.columns]
     df_test.columns = [n.replace('<', '').replace('>', '') for n in df_test.columns]
 
+    global CONTINUOUS_COLUMNS
+    tmp = CATEGORICAL_COLUMNS
+    tmp.append('id')
+    tmp.append('overdue')
+    CONTINUOUS_COLUMNS = [x for x in df_train.columns if x not in tmp]
+    CONTINUOUS_COLUMNS.remove('Unnamed: 0')
+    CATEGORICAL_COLUMNS.remove('id')
+    CATEGORICAL_COLUMNS.remove('overdue')
+    print(CONTINUOUS_COLUMNS)
+    print(CATEGORICAL_COLUMNS)
+
     X_train, X_test, y_train, y_test = cv.train_test_split(df_train, df_train[LABEL_COLUMN], test_size=0.33, random_state=42)
     pos = X_train.loc[X_train['overdue']==0]
     neg = X_train.loc[X_train['overdue'] == 1]
-    final = pos.sample(frac = 0.3)
-    final = final.append(neg)
-    final = final.iloc[np.random.permutation(len(final))]
-    X_train = final
+    # # final = pos.sample(frac = 0.3)
+    # final = final.append(neg)
+    # final = final.iloc[np.random.permutation(len(final))]
+    # X_train = final
     # remove NaN elements
     # df_train = df_train.dropna(how='any', axis=0)
     # df_test = df_test.dropna(how='any', axis=0)
@@ -179,7 +190,7 @@ def train_and_eval():
 
     m = build_estimator(model_dir)
     m.fit(input_fn=lambda: input_fn(X_train), steps=FLAGS.train_steps)
-    m.export('dl_output_model')
+    # m.export('dl_output_model')
     results = m.evaluate(input_fn=lambda: input_fn(X_test), steps=1)
     for key in sorted(results):
         print("%s: %s" % (key, results[key]))

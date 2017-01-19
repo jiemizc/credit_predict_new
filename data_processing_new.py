@@ -70,11 +70,11 @@ path="/Users/ericzhou.zc/Downloads/credit"
 user_vectors = get_user_vector_for_browse(path)
 
 
-def get_profile(path, one_hot_for_categorial=False, file='train'):
+def get_profile(path=path, one_hot_for_categorial=False, file='train'):
     if file == 'train':
         file = path+"/train/user_info_train.txt"
     else:
-        file = path+"/credit/test/user_info_test.txt"
+        file = path+"/test/user_info_test.txt"
     train_x_profile = pd.read_csv(file, header=None)
     train_x_profile.columns = ['id', 'gender', 'pro', 'edu', 'marry', 'hukou']
     if one_hot_for_categorial == True:
@@ -88,12 +88,12 @@ def get_profile(path, one_hot_for_categorial=False, file='train'):
     return train_x_profile
 
 
-def get_label():
-    train_y = pd.read_csv("/Users/ericzhou.zc/Downloads/credit/train/overdue_train.txt", header=None)
+def get_label(path=path):
+    train_y = pd.read_csv(path+"/train/overdue_train.txt", header=None)
     train_y.columns = ['id', 'overdue']
     return train_y
 
-def get_bank_detail_period(path,file='train'):
+def get_bank_detail_period(path=path,file='train'):
     if file == 'train':
         file = path+"/train/bank_detail_train.txt"
         file_loan = path+"/train/loan_time_train.txt"
@@ -129,7 +129,7 @@ def get_bank_detail_period(path,file='train'):
     tmp['net_outcome'] = outcome_x['volumn_sum'] - income_x['volumn_sum']
     return tmp
 
-def get_bank_detail(path,file='train'):
+def get_bank_detail(path=path,file='train'):
     if file == 'train':
         fp= path+"/train/bank_detail_train.txt"
     else:
@@ -170,7 +170,7 @@ def get_bank_detail(path,file='train'):
 
     return pd.merge(tmp, period_vector, left_index=True, right_index=True, how='outer')
 
-def get_loan_time(path,file='train'):
+def get_loan_time(path=path,file='train'):
     if file == 'train':
         file = path+"/train/loan_time_train.txt"
     else:
@@ -228,7 +228,7 @@ def get_bill_data_period(train_x_credit, loan_time, period=60):
 
     return pd.merge(vec2, vec3, left_index=True, right_index=True, how='outer')
 
-def get_bill_data(path,file='train'):
+def get_bill_data(path=path,file='train'):
     if file == 'train':
         file = path+"/train/bill_detail_train.txt"
         file_loan = path+"/train/loan_time_train.txt"
@@ -256,7 +256,7 @@ def get_bill_data(path,file='train'):
     return pd.merge(tmp, vec1, left_index=True, right_index=True,how='outer')
 
 
-def get_train_data(one_hot_for_categorial=False, browse=False, path="/Users/ericzhou.zc/Downloads/credit"):
+def get_train_data(one_hot_for_categorial=False, browse=False):
     profile = get_profile(path=path,one_hot_for_categorial=one_hot_for_categorial,file='train')
     bank = get_bank_detail(path=path,file='train')
     bill = get_bill_data(file='train',path=path)
@@ -282,7 +282,7 @@ def get_train_data(one_hot_for_categorial=False, browse=False, path="/Users/eric
     return t, label
 
 
-def get_test_data(path="/Users/ericzhou.zc/Downloads/credit",one_hot_for_categorial=False, browse=False):
+def get_test_data(one_hot_for_categorial=False, browse=False):
     profile = get_profile(one_hot_for_categorial=one_hot_for_categorial,file='test')
     bank = get_bank_detail(file='test')
     bill = get_bill_data(file='test')

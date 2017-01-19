@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-from sklearn import cross_validation
-from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier
-import data_processing as dp
-import pandas as pd
 
 class GbdtLR:
     def __init__(self, l = 0.01):

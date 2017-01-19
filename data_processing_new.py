@@ -51,10 +51,10 @@ def ks_scoring_func(y, y_pred, i=1):
 my_scorer = metrics.make_scorer(ks_scoring_func, greater_is_better=True, needs_proba=True)
 
 
-def get_user_vector_for_browse():
-    train_x_browse = pd.read_csv("/Users/ericzhou.zc/Downloads/credit/train/browse_history_train.txt", header=None)
+def get_user_vector_for_browse(path):
+    train_x_browse = pd.read_csv(path+"/train/browse_history_train.txt", header=None)
     train_x_browse.columns = ['id', 'time', 'bid', 'btype']
-    test_x_browse = pd.read_csv("/Users/ericzhou.zc/Downloads/credit/test/browse_history_test.txt", header=None)
+    test_x_browse = pd.read_csv(path+"/test/browse_history_test.txt", header=None)
     test_x_browse.columns = ['id', 'time', 'bid', 'btype']
     combine_x_browse = train_x_browse.append(test_x_browse)
     rows = combine_x_browse['id']
@@ -66,14 +66,15 @@ def get_user_vector_for_browse():
     return pd.DataFrame(user_vectors, columns=['emb0', 'emb1', 'emb2'])
 
 # user_vectors=[]
-user_vectors = get_user_vector_for_browse()
+path="/Users/ericzhou.zc/Downloads/credit"
+user_vectors = get_user_vector_for_browse(path)
 
 
-def get_profile(one_hot_for_categorial=False, file='train'):
+def get_profile(path, one_hot_for_categorial=False, file='train'):
     if file == 'train':
-        file = "/Users/ericzhou.zc/Downloads/credit/train/user_info_train.txt"
+        file = path+"/train/user_info_train.txt"
     else:
-        file = "/Users/ericzhou.zc/Downloads/credit/test/user_info_test.txt"
+        file = path+"/credit/test/user_info_test.txt"
     train_x_profile = pd.read_csv(file, header=None)
     train_x_profile.columns = ['id', 'gender', 'pro', 'edu', 'marry', 'hukou']
     if one_hot_for_categorial == True:
@@ -92,13 +93,13 @@ def get_label():
     train_y.columns = ['id', 'overdue']
     return train_y
 
-def get_bank_detail_period(file='train'):
+def get_bank_detail_period(path,file='train'):
     if file == 'train':
-        file = "/Users/ericzhou.zc/Downloads/credit/train/bank_detail_train.txt"
-        file_loan = "/Users/ericzhou.zc/Downloads/credit/train/loan_time_train.txt"
+        file = path+"/train/bank_detail_train.txt"
+        file_loan = path+"/train/loan_time_train.txt"
     else:
-        file = "/Users/ericzhou.zc/Downloads/credit/test/bank_detail_test.txt"
-        file_loan = "/Users/ericzhou.zc/Downloads/credit/test/loan_time_test.txt"
+        file = path+"/test/bank_detail_test.txt"
+        file_loan = path+"/test/loan_time_test.txt"
     train_bank_x = pd.read_csv(file, header=None)
     train_bank_x.columns = ['id', 'time', 'trade_type', 'volumn', 'salary_tag']
 
@@ -128,11 +129,11 @@ def get_bank_detail_period(file='train'):
     tmp['net_outcome'] = outcome_x['volumn_sum'] - income_x['volumn_sum']
     return tmp
 
-def get_bank_detail(file='train'):
+def get_bank_detail(path,file='train'):
     if file == 'train':
-        fp= "/Users/ericzhou.zc/Downloads/credit/train/bank_detail_train.txt"
+        fp= path+"/train/bank_detail_train.txt"
     else:
-        fp = "/Users/ericzhou.zc/Downloads/credit/test/bank_detail_test.txt"
+        fp = path+"/test/bank_detail_test.txt"
     train_bank_x = pd.read_csv(fp, header=None)
     train_bank_x.columns = ['id', 'time', 'trade_type', 'volumn', 'salary_tag']
 
@@ -163,16 +164,17 @@ def get_bank_detail(file='train'):
     income_x.columns = ['_'.join(col).strip() for col in income_x.columns.values]
     outcome_x.columns = ['_'.join(col).strip() for col in outcome_x.columns.values]
     other = pd.merge(income_x, outcome_x, left_index=True, right_index=True, how='outer')
-    # period_vector = get_bank_detail_period(file)
-    # tmp = pd.merge(train_bank_salary, other, left_index=True, right_index=True, how='outer')
 
-    return pd.merge(train_bank_salary, other, left_index=True, right_index=True, how='outer')
+    period_vector = get_bank_detail_period(path, file)
+    tmp = pd.merge(train_bank_salary, other, left_index=True, right_index=True, how='outer')
 
-def get_loan_time(file='train'):
+    return pd.merge(tmp, period_vector, left_index=True, right_index=True, how='outer')
+
+def get_loan_time(path,file='train'):
     if file == 'train':
-        file = "/Users/ericzhou.zc/Downloads/credit/train/loan_time_train.txt"
+        file = path+"/train/loan_time_train.txt"
     else:
-        file = "/Users/ericzhou.zc/Downloads/credit/test/loan_time_test.txt"
+        file = path+"/test/loan_time_test.txt"
     loan_time =  pd.read_csv(file, header=None)
     loan_time.columns = ['id','loan_time']
 
@@ -226,13 +228,13 @@ def get_bill_data_period(train_x_credit, loan_time, period=60):
 
     return pd.merge(vec2, vec3, left_index=True, right_index=True, how='outer')
 
-def get_bill_data(file='train'):
+def get_bill_data(path,file='train'):
     if file == 'train':
-        file = "/Users/ericzhou.zc/Downloads/credit/train/bill_detail_train.txt"
-        file_loan = "/Users/ericzhou.zc/Downloads/credit/train/loan_time_train.txt"
+        file = path+"/train/bill_detail_train.txt"
+        file_loan = path+"/train/loan_time_train.txt"
     else:
-        file = "/Users/ericzhou.zc/Downloads/credit/test/bill_detail_test.txt"
-        file_loan = "/Users/ericzhou.zc/Downloads/credit/test/loan_time_test.txt"
+        file = path+"/test/bill_detail_test.txt"
+        file_loan = path+"/test/loan_time_test.txt"
 
     # 读取信用卡记录
     train_x_credit = pd.read_csv(file, header=None)
@@ -254,11 +256,11 @@ def get_bill_data(file='train'):
     return pd.merge(tmp, vec1, left_index=True, right_index=True,how='outer')
 
 
-def get_train_data(one_hot_for_categorial=False, browse=False):
-    profile = get_profile(one_hot_for_categorial=one_hot_for_categorial,file='train')
-    bank = get_bank_detail(file='train')
-    bill = get_bill_data(file='train')
-    label = get_label()
+def get_train_data(one_hot_for_categorial=False, browse=False, path="/Users/ericzhou.zc/Downloads/credit"):
+    profile = get_profile(path=path,one_hot_for_categorial=one_hot_for_categorial,file='train')
+    bank = get_bank_detail(path=path,file='train')
+    bill = get_bill_data(file='train',path=path)
+    label = get_label(path=path)
 
     t = pd.merge(profile, bank, right_index=True, left_on='id', how='left')
     t = pd.merge(t, bill, right_index=True, left_on='id', how='left')
@@ -272,7 +274,7 @@ def get_train_data(one_hot_for_categorial=False, browse=False):
     # t[['in_num','trade_num', 'volumn', 'salary']] = t[['in_num','trade_num', 'volumn', 'salary']].apply(
     #                           lambda x: min_max_scaler.fit_transform(x))
 
-    t.to_csv("/Users/ericzhou.zc/Downloads/credit/train/input.txt")
+    t.to_csv(path+"/train/input.txt")
 
     t = t.drop('id', 1)
     label = t['overdue']
@@ -280,7 +282,7 @@ def get_train_data(one_hot_for_categorial=False, browse=False):
     return t, label
 
 
-def get_test_data(one_hot_for_categorial=False, browse=False):
+def get_test_data(path="/Users/ericzhou.zc/Downloads/credit",one_hot_for_categorial=False, browse=False):
     profile = get_profile(one_hot_for_categorial=one_hot_for_categorial,file='test')
     bank = get_bank_detail(file='test')
     bill = get_bill_data(file='test')
@@ -296,7 +298,7 @@ def get_test_data(one_hot_for_categorial=False, browse=False):
     # t[['in_num','trade_num', 'volumn', 'salary']] = t[['in_num','trade_num', 'volumn', 'salary']].apply(
     #                           lambda x: min_max_scaler.fit_transform(x))
 
-    t.to_csv("/Users/ericzhou.zc/Downloads/credit/test/input.txt")
+    t.to_csv(path+"/test/input.txt")
 
     ids = t['id']
     t = t.drop('id', 1)

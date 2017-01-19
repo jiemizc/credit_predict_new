@@ -50,4 +50,4 @@ lr_test_x = gbdt.predict_proba(test_x)
 rs = pd.DataFrame(lr_test_x[:,1])
 rs.columns=['probability']
 rs['userid']=ids
-rs.to_csv("/Users/ericzhou.zc/Downloads/credit/test/gbdt_lr_rs_.csv", columns=['userid','probability'], index=False)
+rs.to_csv("/Users/ericzhou.zc/Downloads/credit/test/gbdt_lr_rs_30_60_90.csv", columns=['userid','probability'], index=False)

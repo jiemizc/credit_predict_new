@@ -66,20 +66,6 @@ def p(group):
         new_rt['overdue_ratio'+str(row.name)] = pd.Series(row.values[1])
     return new_rt
 
-#groupby id
-def g(group):
-    rt = group.apply(p)
-    rt.index = rt.index.droplevel(1)
-    return group.apply(p)
-
-    # shift = tmp['time'].shift(1)
-    # shift.columns=['timeshift']
-    # tmp['timeshift'] = shift
-    #
-    # group.agg('')
-    # arr = tmp.__array__()
-    # tmp = pd.DataFrame(arr, columns=tmp.columns)
-
 def get_user_vector_for_browse(path):
     train_x_browse = pd.read_csv(path+"/train/browse_history_train.txt", header=None)
     train_x_browse.columns = ['id', 'time', 'bid', 'btype']
@@ -249,8 +235,9 @@ def get_loan_time(path=path,file='train'):
 
 def get_bill_vec(train_x_credit):
     grouped_credit = train_x_credit.groupby('id')
-    grouped_credit.apply(g)
-    threshold = -3
+    overdue_info = grouped_credit.apply(p)
+    overdue_info.index = overdue_info.index.droplevel(1)
+    threshold = -5
 
     print "generating credit_detail_aggregation"
     # cust = lambda g: sum(train_x_credit.ix[g.index]['last_pay'] - train_x_credit.ix[g.index]['last_to_pay'] <threshold)
@@ -269,17 +256,18 @@ def get_bill_vec(train_x_credit):
         'cur_available': ['max', 'mean', 'std'],
         'cash_num': ['max', 'mean', 'std']})
 
-    tmp = grouped_credit.last_pay.agg(
-        {'pay_less0': lambda x: sum(x < 0) * 1.0 / (1 + sum(train_x_credit.ix[x.index, 'last_to_pay'] > 0)),
-         'pay_more': lambda x: sum(
-             train_x_credit.ix[x.index, 'last_pay'] -
-             train_x_credit.ix[x.index,
-                               'last_to_pay'] > 4) * 1.0 / (1 + sum(train_x_credit.ix[x.index, 'last_to_pay'] > 0))})
-
-    grouped_credit_x['pay_less0'] = tmp['pay_less0']
-    grouped_credit_x['pay_more'] = tmp['pay_more']
+    # tmp = grouped_credit.last_pay.agg(
+    #     {'pay_less0': lambda x: sum(x < 0) * 1.0 / (1 + sum(train_x_credit.ix[x.index, 'last_to_pay'] > 0)),
+    #      'pay_more': lambda x: sum(
+    #          train_x_credit.ix[x.index, 'last_pay'] -
+    #          train_x_credit.ix[x.index,
+    #                            'last_to_pay'] > 4) * 1.0 / (1 + sum(train_x_credit.ix[x.index, 'last_to_pay'] > 0))})
+    #
+    # grouped_credit_x['pay_less0'] = tmp['pay_less0']
+    # grouped_credit_x['pay_more'] = tmp['pay_more']
 
     # 'status':[{'distinct_s':lambda x: len(x.unique())}]})
+    grouped_credit_x = pd.merge(grouped_credit_x, overdue_info, left_index=True, right_index=True, how='outer')
     grouped_credit_x.columns = ['_'.join(col).strip() for col in grouped_credit_x.columns.values]
     return grouped_credit_x
 

@@ -6,7 +6,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 class GbdtLR:
     def __init__(self, l = 0.01):
         self.l = l
-        self.gbdt = GradientBoostingClassifier()
+        self.gbdt = GradientBoostingClassifier(n_estimators=200)
         self.lr = LogisticRegression();
         self.onehot = OneHotEncoder()
 

@@ -6,6 +6,11 @@ import sklearn.preprocessing as pp
 from sklearn.decomposition  import NMF
 from scipy import sparse
 import numpy as np
+def cut(df, colname, bin):
+    arr = df[colname]
+    df[colname] = pd.cut(arr, bin).labels
+    return df
+
 def ks_scoring_func(y, y_pred):
     df = pd.DataFrame()
     df['y_pred'] = y_pred[:,1]

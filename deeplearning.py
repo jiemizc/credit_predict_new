@@ -20,7 +20,6 @@ import sklearn.cross_validation as cv
 import numpy as np
 import tempfile
 from six.moves import urllib
-
 import pandas as pd
 import tensorflow as tf
 
@@ -94,6 +93,8 @@ def build_estimator(model_dir):
                     tf.contrib.layers.crossed_column([gender, hukou],
                                                      hash_bucket_size=int(50)),
                     tf.contrib.layers.crossed_column([gender, edu],
+                                                     hash_bucket_size=int(50)),
+                    tf.contrib.layers.crossed_column([gender, marry, edu],
                                                      hash_bucket_size=int(50)),
                     tf.contrib.layers.crossed_column([marry, hukou],
                                                      hash_bucket_size=int(50))]
@@ -171,7 +172,7 @@ def train_and_eval():
 
     X_train, X_test, y_train, y_test = cv.train_test_split(df_train, df_train[LABEL_COLUMN], test_size=0.33, random_state=42)
     pos = X_train.loc[X_train['overdue']==0]
-    neg = X_train.loc[X_train['overdue'] == 1]
+    neg = X_train.loc[X_train['overdue']==1]
     # # final = pos.sample(frac = 0.3)
     # final = final.append(neg)
     # final = final.iloc[np.random.permutation(len(final))]
